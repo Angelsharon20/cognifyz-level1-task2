@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    <%= view === 'form' ? 'Create Account – Cognifyz' : view === 'dashboard' ? 'User Registry – Cognifyz' : 'Not Found – Cognifyz' %>
+  </title>
+
+  <!-- Google Fonts: DM Sans (UI) + JetBrains Mono (data) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+  <!--
+    ════════════════════════════════════════════════════════════════
+    INLINE STYLES — Task requirement: "direct element styling rules
+    and CSS variables within the template".
+    All design tokens live here as :root variables so every element
+    below can reference them. Bootstrap utility classes handle the
+    responsive grid; everything else is custom.
+    ════════════════════════════════════════════════════════════════
+  -->
+  <style>
+    /* ── 1. DESIGN TOKENS ──────────────────────────────────────── */
+    :root {
+      /* Palette */
+      --bg:           #0d0d14;
+      --surface:      #161622;
+      --surface-2:    #1e1e30;
+      --surface-3:    #252538;
+      --border:       #2c2c45;
+      --border-light: #3a3a58;
+
+      /* Accent – cyan-mint (distinct from Task 1 violet) */
+      --accent:       #00d4aa;
+      --accent-dim:   rgba(0, 212, 170, 0.15);
+      --accent-glow:  rgba(0, 212, 170, 0.25);
+      --accent-dark:  #009e7e;
+
+      /* Semantic */
+      --error:        #ff6b6b;
+      --error-dim:    rgba(255, 107, 107, 0.12);
+      --warn:         #fbbf24;
+      --warn-dim:     rgba(251, 191, 36, 0.15);
+      --ok:           #34d399;
+      --ok-dim:       rgba(52, 211, 153, 0.12);
+
+      /* Role badge colours */
+      --role-frontend:     #818cf8;
+      --role-backend:      #38bdf8;
+      --role-fullstack:    #00d4aa;
+      --role-data-science: #f472b6;
+      --role-devops:       #fb923c;
+      --role-mobile:       #a78bfa;
+      --role-ui-ux:        #facc15;
+
+      /* Text */
+      --text:         #e2e2f0;
+      --text-muted:   #8080a8;
+      --text-dim:     #4c4c70;
+      --white:        #ffffff;
+
+      /* Typography */
+      --font-ui:   'DM Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Geometry */
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 16px;
+      --r-xl: 24px;
+
+      /* Transitions */
+      --t: 220ms ease;
+      --t-slow: 400ms ease;
+    }
+
+    /* ── 2. RESET & BASE ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { height: 100%; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-ui);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      margin: 0;
+    }
+
+    /* ── 3. LAYOUT – SPLIT PANEL ───────────────────────────────── */
+    .split-layout {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      min-height: 100vh;
+    }
+    @media (max-width: 991px) {
+      .split-layout { grid-template-columns: 1fr; }
+    }
+
+    /* Left decorative panel */
+    .panel-left {
+      background: linear-gradient(160deg, #0f1126 0%, #121228 50%, #0d1f1a 100%);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 3rem 2.5rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    @media (max-width: 991px) {
+      .panel-left {
+        position: static;
+        height: auto;
+        padding: 2.5rem 1.5rem 2rem;
+      }
+    }
+
+    /* Animated background grid on left panel */
+    .panel-left::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right,  rgba(0,212,170,0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,212,170,0.04) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
+    }
+
+    /* Floating node constellation – the page's signature element */
+    .constellation {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .c-node {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.6;
+    }
+    .c-node:nth-child(1)  { width: 6px;  height: 6px;  top: 18%;  left: 22%; animation: pulse 3.2s 0s   infinite; }
+    .c-node:nth-child(2)  { width: 4px;  height: 4px;  top: 35%;  left: 68%; animation: pulse 2.8s 0.4s infinite; }
+    .c-node:nth-child(3)  { width: 8px;  height: 8px;  top: 55%;  left: 15%; animation: pulse 4s   0.8s infinite; }
+    .c-node:nth-child(4)  { width: 5px;  height: 5px;  top: 72%;  left: 55%; animation: pulse 3.5s 0.2s infinite; }
+    .c-node:nth-child(5)  { width: 3px;  height: 3px;  top: 82%;  left: 78%; animation: pulse 2.6s 1.0s infinite; }
+    .c-node:nth-child(6)  { width: 7px;  height: 7px;  top: 28%;  left: 82%; animation: pulse 3.8s 0.6s infinite; }
+    .c-line {
+      position: absolute;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      height: 1px;
+      opacity: 0.12;
+    }
+    .c-line:nth-child(7)  { width: 200px; top: 18%;  left: 22%;  transform: rotate(32deg); }
+    .c-line:nth-child(8)  { width: 150px; top: 35%;  left: 30%;  transform: rotate(-18deg);}
+    .c-line:nth-child(9)  { width: 180px; top: 55%;  left: 15%;  transform: rotate(45deg); }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1);   opacity: 0.6; }
+      50%       { transform: scale(1.8); opacity: 1;   box-shadow: 0 0 12px var(--accent); }
+    }
+
+    /* Left panel content */
+    .panel-brand {
+      position: relative;
+      z-index: 1;
+    }
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0,212,170,0.3);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 2rem;
+    }
+    .panel-headline {
+      font-size: clamp(1.9rem, 3vw, 2.6rem);
+      font-weight: 700;
+      line-height: 1.15;
+      color: var(--white);
+      letter-spacing: -0.03em;
+    }
+    .panel-headline .hl { color: var(--accent); }
+    .panel-sub {
+      margin-top: 1rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      max-width: 32ch;
+      line-height: 1.6;
+    }
+    .panel-features {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+      z-index: 1;
+    }
+    .panel-feature {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .feat-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .panel-footer-txt {
+      position: relative;
+      z-index: 1;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+    .panel-footer-txt a { color: var(--accent); text-decoration: none; }
+
+    /* ── 4. RIGHT PANEL / MAIN ─────────────────────────────────── */
+    .panel-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 3rem 2.5rem;
+      overflow-y: auto;
+    }
+    @media (max-width: 767px) {
+      .panel-right { padding: 2rem 1.25rem; }
+    }
+
+    .form-shell {
+      max-width: 540px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── 5. FORM HEADER ────────────────────────────────────────── */
+    .form-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .form-title {
+      font-size: clamp(1.6rem, 3vw, 2rem);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin: 0 0 0.5rem;
+    }
+    .form-subtitle {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-bottom: 2rem;
+    }
+    .form-subtitle a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    /* ── 6. ERROR BANNER ───────────────────────────────────────── */
+    .error-banner {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: var(--error-dim);
+      border: 1px solid rgba(255,107,107,0.3);
+      border-radius: var(--r-md);
+      color: var(--error);
+      font-size: 0.84rem;
+      padding: 0.7rem 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── 7. FORM FIELDS ────────────────────────────────────────── */
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-bottom: 1.1rem;
+    }
+    .field-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .field-req  { color: var(--accent); }
+    .field-opt  { color: var(--text-dim); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+    .field-wrap {
+      position: relative;
+    }
+    .field-ico {
+      position: absolute;
+      left: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      pointer-events: none;
+      transition: color var(--t);
+    }
+    .field-ico-right {
+      position: absolute;
+      right: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 1rem;
+      z-index: 2;
+      background: none;
+      border: none;
+      padding: 0;
+      line-height: 1;
+      transition: color var(--t);
+    }
+    .field-ico-right:hover { color: var(--accent); }
+
+    .field-input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--white);
+      font-family: var(--font-ui);
+      font-size: 0.92rem;
+      padding: 0.72rem 0.9rem 0.72rem 2.55rem;
+      outline: none;
+      transition: border-color var(--t), box-shadow var(--t), background var(--t);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    .field-input::placeholder { color: var(--text-dim); }
+    .field-input:focus {
+      border-color: var(--accent);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .field-wrap:focus-within .field-ico { color: var(--accent); }
+
+    /* Textarea */
+    .field-textarea {
+      padding-top: 0.75rem;
+      padding-left: 2.55rem;
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.55;
+    }
+    .field-ico-ta { top: 0.88rem; transform: none; }
+
+    /* Select */
+    .field-select {
+      cursor: pointer;
+      padding-right: 2.4rem;
+    }
+    /* Hide default select arrow – we use the BS icon */
+    .field-select::-ms-expand { display: none; }
+
+    /* Error state */
+    .has-err .field-input  { border-color: var(--error); background: var(--error-dim); }
+    .has-err .field-input:focus { box-shadow: 0 0 0 3px rgba(255,107,107,0.2); }
+    .has-err .field-ico    { color: var(--error); }
+
+    /* Valid state (applied by JS) */
+    .is-ok .field-input    { border-color: var(--ok); }
+    .is-ok .field-ico      { color: var(--ok); }
+
+    .field-err {
+      font-size: 0.78rem;
+      color: var(--error);
+      min-height: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* Char counter row */
+    .char-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .char-ct {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+      padding-top: 1px;
+      flex-shrink: 0;
+    }
+    .char-ct.warn  { color: var(--warn); }
+    .char-ct.limit { color: var(--error); }
+
+    /* Two-column field row */
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    @media (max-width: 500px) { .field-row { grid-template-columns: 1fr; } }
+
+    /* ── 8. PASSWORD STRENGTH METER ────────────────────────────── */
+    /* This is the signature element: segmented, colour-shifting, live feedback */
+    .pw-meter {
+      margin-top: 0.4rem;
+    }
+    .pw-segments {
+      display: flex;
+      gap: 4px;
+      height: 4px;
+    }
+    .pw-seg {
+      flex: 1;
+      border-radius: 2px;
+      background: var(--surface-3);
+      transition: background var(--t-slow);
+    }
+    .pw-label {
+      font-size: 0.73rem;
+      color: var(--text-dim);
+      margin-top: 4px;
+      height: 1rem;
+      transition: color var(--t);
+    }
+    /* Filled segments coloured by JS */
+    .pw-seg.weak   { background: var(--error); }
+    .pw-seg.fair   { background: var(--warn);  }
+    .pw-seg.strong { background: var(--ok);    }
+    .pw-seg.great  { background: var(--accent);}
+
+    /* ── 9. SUBMIT BUTTON ──────────────────────────────────────── */
+    .btn-register {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: linear-gradient(135deg, var(--accent), #00b894);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: var(--r-md);
+      padding: 0.85rem 1.5rem;
+      cursor: pointer;
+      transition: transform var(--t), box-shadow var(--t), filter var(--t);
+      box-shadow: 0 4px 20px var(--accent-glow);
+      margin-top: 0.75rem;
+      letter-spacing: 0.01em;
+    }
+    .btn-register:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(0,212,170,0.35);
+      filter: brightness(1.08);
+    }
+    .btn-register:active  { transform: translateY(0); }
+    .btn-register:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-register .btn-spinner {
+      display: none;
+    }
+    .btn-register.loading .btn-txt     { display: none; }
+    .btn-register.loading .btn-spinner { display: flex; align-items: center; gap: 0.4rem; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-icon { display: inline-block; animation: spin 0.7s linear infinite; }
+
+    /* ── 10. DIVIDER ───────────────────────────────────────────── */
+    .or-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+    }
+    .or-divider::before, .or-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── 11. DASHBOARD LAYOUT ──────────────────────────────────── */
+    .dash-wrap {
+      padding: 2.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    @media (max-width: 767px) { .dash-wrap { padding: 1.5rem 1rem; } }
+
+    /* Topbar */
+    .dash-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .dash-brand {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.02em;
+    }
+    .dash-brand span { color: var(--accent); }
+    .dash-actions { display: flex; gap: 0.75rem; align-items: center; }
+    .btn-outline-sm {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 0.4rem 0.9rem;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color var(--t), border-color var(--t), background var(--t);
+    }
+    .btn-outline-sm:hover {
+      color: var(--white);
+      border-color: var(--border-light);
+      background: var(--surface-2);
+    }
+    .btn-accent-sm {
+      background: var(--accent-dim);
+      border-color: rgba(0,212,170,0.35);
+      color: var(--accent);
+    }
+    .btn-accent-sm:hover {
+      background: rgba(0,212,170,0.2);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .btn-danger-sm {
+      color: var(--error);
+      border-color: rgba(255,107,107,0.3);
+    }
+    .btn-danger-sm:hover {
+      background: var(--error-dim);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* Stats row */
+    .dash-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1.25rem 1.5rem;
+    }
+    .stat-card-label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 0.4rem;
+    }
+    .stat-card-val {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--white);
+      line-height: 1;
+    }
+    .stat-card-val.accent { color: var(--accent); }
+
+    /* Flash message */
+    .flash {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-radius: var(--r-md);
+      padding: 0.9rem 1.25rem;
+      font-size: 0.88rem;
+      margin-bottom: 1.5rem;
+      animation: slideDown 0.4s ease;
+    }
+    .flash.success {
+      background: var(--ok-dim);
+      border: 1px solid rgba(52,211,153,0.3);
+      color: var(--ok);
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-8px); opacity: 0; }
+      to   { transform: translateY(0);    opacity: 1; }
+    }
+
+    /* ── 12. USER TABLE ────────────────────────────────────────── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      overflow: hidden;
+    }
+    .table-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .table-card-title {
+      font-weight: 600;
+      font-size: 0.92rem;
+      color: var(--white);
+    }
+    .table-card-count {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 2px 10px;
+    }
+    .table-responsive { overflow-x: auto; }
+    .reg-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .reg-table th {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--text-dim);
+      padding: 0.85rem 1.25rem;
+      text-align: left;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .reg-table td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--text);
+      vertical-align: middle;
+    }
+    .reg-table tbody tr:last-child td { border-bottom: none; }
+    .reg-table tbody tr {
+      transition: background var(--t);
+    }
+    .reg-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* New row highlight */
+    .reg-table tbody tr.row-new {
+      background: rgba(0,212,170,0.05);
+    }
+    .reg-table tbody tr.row-new td:first-child {
+      border-left: 2px solid var(--accent);
+    }
+
+    /* ID cell */
+    .cell-id {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* Name + avatar */
+    .cell-user {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      white-space: nowrap;
+    }
+    .user-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      color: var(--bg);
+    }
+    .cell-name  { font-weight: 500; color: var(--white); font-size: 0.88rem; }
+    .cell-email {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Role badge */
+    .role-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 100px;
+      padding: 3px 10px;
+      white-space: nowrap;
+      /* Colour set inline by EJS for each row */
+    }
+
+    /* Bio cell */
+    .cell-bio {
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-muted);
+      font-size: 0.83rem;
+    }
+
+    /* Date cell */
+    .cell-date {
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      gap: 0.75rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .empty-icon { font-size: 2.5rem; color: var(--text-dim); }
+    .empty-txt  { font-size: 0.88rem; }
+
+    /* ── 13. 404 PAGE ──────────────────────────────────────────── */
+    .pg-404 {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      text-align: center;
+    }
+    .pg-404-num {
+      font-size: 8rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+    .pg-404-msg { color: var(--text-muted); font-size: 1rem; }
+
+    /* ── 14. REDUCED MOTION ────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<%# ═══════════════════════════════════════════════════════════════ %>
+<%# REGISTRATION FORM VIEW                                          %>
+<%# ═══════════════════════════════════════════════════════════════ %>
+<% if (view === 'form') { %>
+
+<div class="split-layout">
+
+  <!-- ── LEFT DECORATIVE PANEL ──────────────────────────────────── -->
+  <aside class="panel-left" aria-hidden="true">
+    <!-- Animated constellation nodes (the page's signature element) -->
+    <div class="constellation">
+      <div class="c-node"></div><div class="c-node"></div>
+      <div class="c-node"></div><div class="c-node"></div>
+      <div class="c-node"></div><div class="c-node"></div>
+      <div class="c-line"></div><div class="c-line"></div><div class="c-line"></div>
+    </div>
+
+    <!-- Top: brand copy -->
+    <div class="panel-brand">
+      <div class="brand-badge">
+        <i class="bi bi-cpu-fill"></i> Cognifyz Technologies
+      </div>
+      <h1 class="panel-headline">
+        Your journey<br/>starts <span class="hl">here.</span>
+      </h1>
+      <p class="panel-sub">
+        Join the Cognifyz developer registry. One account unlocks
+        internship tools, project boards, and team channels.
+      </p>
+
+      <div class="panel-features">
+        <div class="panel-feature">
+          <div class="feat-dot"></div> Instant project board access
+        </div>
+        <div class="panel-feature">
+          <div class="feat-dot"></div> Mentorship queue assignment
+        </div>
+        <div class="panel-feature">
+          <div class="feat-dot"></div> Real-time peer collaboration
+        </div>
+        <div class="panel-feature">
+          <div class="feat-dot"></div> Certificate on completion
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: footer note -->
+    <p class="panel-footer-txt">
+      Already registered? <a href="/dashboard">View the registry →</a>
+    </p>
+  </aside>
+
+  <!-- ── RIGHT PANEL: FORM ───────────────────────────────────────── -->
+  <main class="panel-right">
+    <div class="form-shell">
+
+      <p class="form-eyebrow">Internship Portal</p>
+      <h2 class="form-title">Create your account</h2>
+      <p class="form-subtitle">
+        Already registered? <a href="/dashboard">View the dashboard</a>
+      </p>
+
+      <!-- Server-side error banner -->
+      <% if (Object.keys(errors).length > 0) { %>
+      <div class="error-banner" role="alert">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        Fix the errors below, then try again.
+      </div>
+      <% } %>
+
+      <form id="regForm" action="/register" method="POST" novalidate>
+
+        <!-- Full Name -->
+        <div class="field-group <%= errors.fullName ? 'has-err' : '' %>" id="grp-fullName">
+          <label class="field-label" for="fullName">
+            Full Name <span class="field-req">*</span>
+          </label>
+          <div class="field-wrap">
+            <i class="bi bi-person field-ico"></i>
+            <input
+              type="text" id="fullName" name="fullName"
+              class="field-input"
+              placeholder="Angel Sharon J"
+              value="<%= formData.fullName || '' %>"
+              autocomplete="name"
+              required
+            />
+          </div>
+          <span class="field-err" id="err-fullName">
+            <% if (errors.fullName) { %><i class="bi bi-x-circle-fill"></i> <%= errors.fullName %><% } %>
+          </span>
+        </div>
+
+        <!-- Email -->
+        <div class="field-group <%= errors.email ? 'has-err' : '' %>" id="grp-email">
+          <label class="field-label" for="email">
+            Email Address <span class="field-req">*</span>
+          </label>
+          <div class="field-wrap">
+            <i class="bi bi-envelope field-ico"></i>
+            <input
+              type="email" id="email" name="email"
+              class="field-input"
+              placeholder="you@example.com"
+              value="<%= formData.email || '' %>"
+              autocomplete="email"
+              required
+            />
+          </div>
+          <span class="field-err" id="err-email">
+            <% if (errors.email) { %><i class="bi bi-x-circle-fill"></i> <%= errors.email %><% } %>
+          </span>
+        </div>
+
+        <!-- Password + Confirm — two columns -->
+        <div class="field-row">
+          <!-- Password -->
+          <div>
+            <div class="field-group <%= errors.password ? 'has-err' : '' %>" id="grp-password">
+              <label class="field-label" for="password">
+                Password <span class="field-req">*</span>
+              </label>
+              <div class="field-wrap">
+                <i class="bi bi-lock field-ico"></i>
+                <input
+                  type="password" id="password" name="password"
+                  class="field-input" style="padding-right: 2.8rem;"
+                  placeholder="Min 6 chars"
+                  autocomplete="new-password"
+                  required
+                />
+                <button type="button" class="field-ico-right" id="togglePw" aria-label="Show password">
+                  <i class="bi bi-eye" id="eyeIcon"></i>
+                </button>
+              </div>
+              <span class="field-err" id="err-password">
+                <% if (errors.password) { %><i class="bi bi-x-circle-fill"></i> <%= errors.password %><% } %>
+              </span>
+            </div>
+            <!-- Password strength meter (signature element) -->
+            <div class="pw-meter" id="pwMeter" style="display:none;">
+              <div class="pw-segments">
+                <div class="pw-seg" id="seg1"></div>
+                <div class="pw-seg" id="seg2"></div>
+                <div class="pw-seg" id="seg3"></div>
+                <div class="pw-seg" id="seg4"></div>
+              </div>
+              <div class="pw-label" id="pwLabel">Enter a password</div>
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="field-group <%= errors.confirmPassword ? 'has-err' : '' %>" id="grp-confirmPassword">
+            <label class="field-label" for="confirmPassword">
+              Confirm <span class="field-req">*</span>
+            </label>
+            <div class="field-wrap">
+              <i class="bi bi-lock-fill field-ico"></i>
+              <input
+                type="password" id="confirmPassword" name="confirmPassword"
+                class="field-input"
+                placeholder="Repeat it"
+                autocomplete="new-password"
+                required
+              />
+            </div>
+            <span class="field-err" id="err-confirmPassword">
+              <% if (errors.confirmPassword) { %><i class="bi bi-x-circle-fill"></i> <%= errors.confirmPassword %><% } %>
+            </span>
+          </div>
+        </div>
+
+        <!-- Role / Interest -->
+        <div class="field-group <%= errors.role ? 'has-err' : '' %>" id="grp-role">
+          <label class="field-label" for="role">
+            Role / Interest <span class="field-req">*</span>
+          </label>
+          <div class="field-wrap">
+            <i class="bi bi-tag field-ico"></i>
+            <select id="role" name="role" class="field-input field-select" required>
+              <option value="" disabled <%= !formData.role ? 'selected' : '' %>>Select your primary focus…</option>
+              <option value="frontend"     <%= formData.role === 'frontend'     ? 'selected' : '' %>>Frontend Development</option>
+              <option value="backend"      <%= formData.role === 'backend'      ? 'selected' : '' %>>Backend Development</option>
+              <option value="fullstack"    <%= formData.role === 'fullstack'    ? 'selected' : '' %>>Full Stack Development</option>
+              <option value="data-science" <%= formData.role === 'data-science' ? 'selected' : '' %>>Data Science & ML</option>
+              <option value="devops"       <%= formData.role === 'devops'       ? 'selected' : '' %>>DevOps & Cloud</option>
+              <option value="mobile"       <%= formData.role === 'mobile'       ? 'selected' : '' %>>Mobile Development</option>
+              <option value="ui-ux"        <%= formData.role === 'ui-ux'        ? 'selected' : '' %>>UI/UX Design</option>
+            </select>
+            <!-- Custom dropdown arrow -->
+            <i class="bi bi-chevron-down field-ico-right" style="pointer-events:none; font-size:0.8rem;"></i>
+          </div>
+          <span class="field-err" id="err-role">
+            <% if (errors.role) { %><i class="bi bi-x-circle-fill"></i> <%= errors.role %><% } %>
+          </span>
+        </div>
+
+        <!-- Bio -->
+        <div class="field-group <%= errors.bio ? 'has-err' : '' %>" id="grp-bio">
+          <label class="field-label" for="bio">
+            Bio <span class="field-req">*</span>
+          </label>
+          <div class="field-wrap">
+            <i class="bi bi-chat-square-text field-ico field-ico-ta"></i>
+            <textarea
+              id="bio" name="bio"
+              class="field-input field-textarea"
+              placeholder="Briefly describe your background, skills, or what you're hoping to build during the internship…"
+              rows="4"
+              maxlength="300"
+              required
+            ><%= formData.bio || '' %></textarea>
+          </div>
+          <div class="char-row">
+            <span class="field-err" id="err-bio">
+              <% if (errors.bio) { %><i class="bi bi-x-circle-fill"></i> <%= errors.bio %><% } %>
+            </span>
+            <span class="char-ct" id="bioCount">0 / 300</span>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-register" id="regBtn">
+          <span class="btn-txt">
+            <i class="bi bi-person-plus-fill"></i> Create account
+          </span>
+          <span class="btn-spinner">
+            <i class="bi bi-arrow-repeat spin-icon"></i> Creating…
+          </span>
+        </button>
+
+      </form>
+
+      <div class="or-divider">or</div>
+      <a href="/dashboard" class="btn-outline-sm" style="width:100%; justify-content:center; display:flex;">
+        <i class="bi bi-table"></i> Browse existing accounts
+      </a>
+
+    </div><!-- /form-shell -->
+  </main>
+</div><!-- /split-layout -->
+
+
+<%# ═══════════════════════════════════════════════════════════════ %>
+<%# DASHBOARD VIEW                                                  %>
+<%# ═══════════════════════════════════════════════════════════════ %>
+<% } else if (view === 'dashboard') { %>
+
+<div class="dash-wrap">
+
+  <!-- Topbar -->
+  <div class="dash-topbar">
+    <div class="dash-brand">Cognifyz<span>.</span> User Registry</div>
+    <div class="dash-actions">
+      <a href="/register" class="btn-outline-sm btn-accent-sm">
+        <i class="bi bi-person-plus-fill"></i> Register new
+      </a>
+      <a href="/clear" class="btn-outline-sm btn-danger-sm"
+         onclick="return confirm('Reset to seed data? All added users will be removed.')">
+        <i class="bi bi-trash3"></i> Reset
+      </a>
+    </div>
+  </div>
+
+  <!-- Flash message -->
+  <% if (flashMessage && flashMessage.type === 'success') { %>
+  <div class="flash success" role="status">
+    <i class="bi bi-check-circle-fill"></i>
+    <%= flashMessage.text %>
+  </div>
+  <% } %>
+
+  <!-- Stats row -->
+  <div class="dash-stats">
+    <div class="stat-card">
+      <div class="stat-card-label">Total accounts</div>
+      <div class="stat-card-val accent"><%= users.length %></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Roles represented</div>
+      <div class="stat-card-val">
+        <%= new Set(users.map(u => u.role)).size %>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Latest join</div>
+      <div class="stat-card-val" style="font-size:1.1rem; font-family:var(--font-mono);">
+        <% if (users.length > 0) {
+             const last = users[users.length - 1].joinedAt;
+             const d = last.toLocaleDateString('en-IN', { day:'2-digit', month:'short' });
+        %>
+          <%= d %>
+        <% } else { %>—<% } %>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Storage</div>
+      <div class="stat-card-val" style="font-size:1.1rem; font-family:var(--font-mono); color:var(--warn);">
+        In-memory
+      </div>
+    </div>
+  </div>
+
+  <!-- User table card -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <span class="table-card-title">Registered Users</span>
+      <span class="table-card-count"><%= users.length %> record<%= users.length !== 1 ? 's' : '' %></span>
+    </div>
+
+    <% if (users.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-icon"><i class="bi bi-people"></i></div>
+      <p class="empty-txt">No users registered yet.<br/>Be the first — <a href="/register" style="color:var(--accent);">create an account</a>.</p>
+    </div>
+
+    <% } else { %>
+    <div class="table-responsive">
+      <table class="reg-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Role</th>
+            <th>Bio</th>
+            <th>Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          <%
+            // Role → colour mapping (inline styles demonstrate CSS variable usage per-element)
+            const roleColours = {
+              'frontend':     '#818cf8',
+              'backend':      '#38bdf8',
+              'fullstack':    '#00d4aa',
+              'data-science': '#f472b6',
+              'devops':       '#fb923c',
+              'mobile':       '#a78bfa',
+              'ui-ux':        '#facc15',
+            };
+            // Role → readable label
+            const roleLabels = {
+              'frontend':     'Frontend',
+              'backend':      'Backend',
+              'fullstack':    'Full Stack',
+              'data-science': 'Data Science',
+              'devops':       'DevOps',
+              'mobile':       'Mobile',
+              'ui-ux':        'UI / UX',
+            };
+            // Avatar background colours (cycle through)
+            const avatarBgs = ['#7c5cfc','#00d4aa','#f472b6','#38bdf8','#fb923c','#818cf8','#facc15'];
+          %>
+          <% users.forEach((user, idx) => {
+               const isNew = flashMessage && flashMessage.newId === user.id;
+               const initials = user.fullName.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase();
+               const avatarBg = avatarBgs[idx % avatarBgs.length];
+               const roleColor = roleColours[user.role] || '#8080a8';
+               const roleLabel = roleLabels[user.role]  || user.role;
+               const dateStr = user.joinedAt.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+               const timeStr = user.joinedAt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+          %>
+          <tr class="<%= isNew ? 'row-new' : '' %>">
+            <!-- ID -->
+            <td><span class="cell-id"><%= user.id %></span></td>
+
+            <!-- User: avatar + name + email stacked -->
+            <td>
+              <div class="cell-user">
+                <div class="user-avatar" style="background: <%= avatarBg %>; box-shadow: 0 0 0 2px rgba(255,255,255,0.06);">
+                  <%= initials %>
+                </div>
+                <div>
+                  <div class="cell-name"><%= user.fullName %></div>
+                  <div class="cell-email"><%= user.email %></div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Role badge: colour injected via inline style (task requirement) -->
+            <td>
+              <span class="role-badge"
+                style="color: <%= roleColor %>; background: <%= roleColor %>1a; border: 1px solid <%= roleColor %>44;">
+                <%= roleLabel %>
+              </span>
+            </td>
+
+            <!-- Bio: truncated -->
+            <td><div class="cell-bio" title="<%= user.bio %>"><%= user.bio %></div></td>
+
+            <!-- Date/time -->
+            <td>
+              <div class="cell-date"><%= dateStr %></div>
+              <div class="cell-date" style="color: var(--text-dim);"><%= timeStr %></div>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div><!-- /table-card -->
+
+  <!-- Footer note -->
+  <p style="font-size:0.75rem; color:var(--text-dim); margin-top:1.5rem; text-align:center; font-family:var(--font-mono);">
+    ⚠ Data is stored in server memory and resets on restart. This is intentional for Level 1 Task 2.
+  </p>
+
+</div><!-- /dash-wrap -->
+
+
+<%# ═══════════════════════════════════════════════════════════════ %>
+<%# 404 VIEW                                                        %>
+<%# ═══════════════════════════════════════════════════════════════ %>
+<% } else { %>
+<div class="pg-404">
+  <div class="pg-404-num">404</div>
+  <p class="pg-404-msg">This page doesn't exist.</p>
+  <a href="/register" class="btn-outline-sm btn-accent-sm mt-3">Go to registration</a>
+</div>
+<% } %>
+
+<!-- Bootstrap JS (needed for navbar collapse on mobile) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Client-side validation -->
+<script src="/js/validation.js"></script>
+</body>
+</html>
